@@ -3,64 +3,76 @@ package com.carl.portfoliocontact.controller;
 import com.carl.portfoliocontact.dto.ContactRequest;
 import com.carl.portfoliocontact.service.EmailService;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.validation.Valid;
-
-import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * REST controller that handles contact form submissions.
- * 
- * This controller exposes an API endpoint that allows client
- * applications to submit contact requests. Each request is 
- * validated and then passed to the EmailService for email delivery.
- * 
- * @author Carl LaLonde
- * @version 1.0
- * @date 8/30/2025
+ *
+ * Exposes /api/contact for the portfolio site to POST form data.
+ * Performs fail-fast validation and returns clear JSON errors
+ * instead of leaking SMTP/stack details to clients.
  */
 @RestController
 @RequestMapping("/api/contact")
 public class ContactController {
 
-	private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
-	private final EmailService emailService;
+    // Simple, permissive format check to catch obvious junk quickly
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 
-  /**
-   * Constructor based dependency injection of EmailService.
-   * 
-   * @param emailService	the service responsible for sending contact emails.
-   */
-	public ContactController(EmailService emailService) {
-		this.emailService = emailService;
-  }
+    private final EmailService emailService;
 
-  /**
-   * Handles incoming contact form submissions.
-   * 
-   * Validates the request payload, forwards the data to 
-   * the EmailService, and responds with a JSON status object.
-   * 
-   * @param req						The validated ContactRequest payload.
-   * @return						A JSON response
-   * @throws MessagingException		if an error occurs while sending the email
-   */
-  @PostMapping
-  public ResponseEntity<?> submit(@Valid @RequestBody ContactRequest req) throws MessagingException {
-	  
-	  // fail-fast
-	  if (req.getEmail() == null || !req.getEmail().matches(EMAIL_REGEX)) {
-		  return ResponseEntity.badRequest().body(Map.of(
-				  "code", "invalid_email",
-				  "message", "Invalid email address. Please verify your email."));
-	  }
-	  
-	  // delegate email sending to the service layer.
-	  emailService.sendContact(req);
-	  
-	  // return a simple JSON response.
-	  return ResponseEntity.ok().body("{\"status\":\"sent\"}");
-  }
+    public ContactController(EmailService emailService) {
+        this.emailService = emailService;
+    }
+
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> submit(@Valid @RequestBody ContactRequest req) {
+        // 1) Fail-fast format check
+        if (req.getEmail() == null || !req.getEmail().matches(EMAIL_REGEX)) {
+            return badEmail();
+        }
+
+        // 2) Strict parser check (same rules JavaMail enforces)
+        try {
+            new InternetAddress(req.getEmail(), true); // strict = true
+        } catch (AddressException ex) {
+            return badEmail();
+        }
+
+        // 3) Delegate to service; map known failures to friendly responses
+        try {
+            emailService.sendContact(req);
+        } catch (AddressException ex) {
+            // If the service does deeper parsing and throws, keep it a 400
+            return badEmail();
+        } catch (MessagingException ex) {
+            // SMTP provider rejected or transient mail issue
+            return ResponseEntity.status(502).body(Map.of(
+                    "code", "smtp_error",
+                    "message", "Email provider rejected the message. Please try again later."
+            ));
+        } catch (Exception ex) {
+            // Last-resort guard: never leak internals to the client
+            return ResponseEntity.status(500).body(Map.of(
+                    "code", "internal_error",
+                    "message", "Unexpected server error."
+            ));
+        }
+
+        // 4) Success
+        return ResponseEntity.ok(Map.of("status", "sent"));
+    }
+
+    private ResponseEntity<Map<String, String>> badEmail() {
+        return ResponseEntity.badRequest().body(Map.of(
+                "code", "invalid_email",
+                "message", "Invalid email address. Please verify your email."
+        ));
+    }
 }
