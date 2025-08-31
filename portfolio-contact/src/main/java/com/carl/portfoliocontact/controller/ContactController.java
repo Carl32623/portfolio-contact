@@ -69,7 +69,7 @@ public class ContactController {
         return ResponseEntity.ok(Map.of("status", "sent"));
     }
 
-    private ResponseEntity<Map<String, String>> badEmail() {
+    private ResponseEntity<Map<String, String>> badEmail() { 
         return ResponseEntity.badRequest().body(Map.of(
                 "code", "invalid_email",
                 "message", "Invalid email address. Please verify your email."

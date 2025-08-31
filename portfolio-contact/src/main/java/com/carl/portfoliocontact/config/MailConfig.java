@@ -23,12 +23,12 @@ public class MailConfig {
 	 * Creates and configures a @link JavaMailSender bean for the application.
 	 * @param host		the mail server host
 	 * @param port		the mail server port
-	 * @param username	the mail account username
+	 * @param username	the mail account username 
 	 * @param password	the mail account password
 	 * @return			a fully configured JavaMailSender instance.
 	 */
   @Bean
-  public JavaMailSender mailSender(
+  public JavaMailSender mailSender( 
       @Value("${spring.mail.host:smtp.aol.com}") String host,
       @Value("${spring.mail.port:587}") int port,
       @Value("${spring.mail.username:}") String username,

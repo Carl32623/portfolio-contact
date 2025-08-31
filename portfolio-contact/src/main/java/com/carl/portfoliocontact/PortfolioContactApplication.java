@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 
  * This class bootstraps the Spring Boot application by loading the application
  * context and starting the embedded server. It leverages Spring Boot's 
- * auto-configuration capabilities to reduce boilerplate and simplify setup.
+ * auto-configuration capabilities to reduce boilerplate and simplify setup. 
  * 
  * @author Carl LaLonde
  * @version 1.0
@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 
 @SpringBootApplication
-public class PortfolioContactApplication {
+public class PortfolioContactApplication { 
 	
 	/**
 	 * The main method used to launch the spring boot application.

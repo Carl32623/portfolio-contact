@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
 
   /** Other mail transport issues (throttling, timeouts, connection errors) */
   @ExceptionHandler(MessagingException.class)
-  public ResponseEntity<?> handleMessaging(MessagingException ex, HttpServletRequest req) {
+  public ResponseEntity<?> handleMessaging(MessagingException ex, HttpServletRequest req) { 
     return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(
         body("smtp_unavailable", "Email service temporarily unavailable. Please try again later.", req.getRequestURI(), null));
   }
