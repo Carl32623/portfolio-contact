@@ -27,6 +27,7 @@ flowchart TD
 ---
 
 ## 📂 Project Structure
+```plaintext
 portfolio-contact/
 ├── src/main/java/com/carl/portfoliocontact
 │   ├── controller/ContactController.java   # REST API endpoint
@@ -37,7 +38,7 @@ portfolio-contact/
 │   ├── application.properties              # Configuration
 ├── pom.xml                                 # Maven dependencies
 └── README.md
-
+```
 ---
 
 ##⚙️ Tech Stack
