@@ -26,6 +26,7 @@ flowchart TD
 
 ---
 
+## 📂 Project Structure
 portfolio-contact/
 ├── src/main/java/com/carl/portfoliocontact
 │   ├── controller/ContactController.java   # REST API endpoint
