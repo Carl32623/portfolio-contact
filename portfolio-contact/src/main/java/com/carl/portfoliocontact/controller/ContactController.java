@@ -4,6 +4,9 @@ import com.carl.portfoliocontact.dto.ContactRequest;
 import com.carl.portfoliocontact.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/contact")
 public class ContactController {
 
+	private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
 	private final EmailService emailService;
 
   /**
@@ -45,6 +49,13 @@ public class ContactController {
    */
   @PostMapping
   public ResponseEntity<?> submit(@Valid @RequestBody ContactRequest req) throws MessagingException {
+	  
+	  // fail-fast
+	  if (req.getEmail() == null || !req.getEmail().matches(EMAIL_REGEX)) {
+		  return ResponseEntity.badRequest().body(Map.of(
+				  "code", "invalid_email",
+				  "message", "Invalid email address. Please verify your email."));
+	  }
 	  
 	  // delegate email sending to the service layer.
 	  emailService.sendContact(req);
